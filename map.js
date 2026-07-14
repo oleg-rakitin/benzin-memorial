@@ -31,6 +31,10 @@ const API_BASE =
     : "/api.php";
 
 const FETCH_TIMEOUT_MS = 8000;
+const GEOLOCATION_TIMEOUT_MS = 9000;
+const DEFAULT_MAP_CENTER = [61, 90];
+const DEFAULT_MAP_ZOOM = 3;
+const USER_LOCATION_ZOOM = 12;
 
 const MARKERS_STORAGE_KEY = "benzin-map-markers";
 
@@ -94,6 +98,7 @@ const DEMO_STATIONS = [
 
 let map = null;
 let clusterGroup = null;
+let userLocationMarker = null;
 let usingBackend = false;
 const markerByStationId = new Map();
 
@@ -187,6 +192,69 @@ function makeStationIcon(color) {
     iconAnchor: [9, 9],
     popupAnchor: [0, -10],
   });
+}
+
+function makeUserLocationIcon() {
+  return L.divIcon({
+    className: "user-location-icon",
+    html: `<span class="user-location-dot" aria-hidden="true"></span>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -12],
+  });
+}
+
+function setGeolocationHint(visible, message) {
+  const el = document.getElementById("mapGeolocationHint");
+  if (!el) return;
+  if (message) el.textContent = message;
+  el.hidden = !visible;
+}
+
+function showUserLocation(lat, lng) {
+  if (!map) return;
+  map.setView([lat, lng], USER_LOCATION_ZOOM, { animate: true });
+  if (userLocationMarker) map.removeLayer(userLocationMarker);
+  userLocationMarker = L.marker([lat, lng], {
+    icon: makeUserLocationIcon(),
+    zIndexOffset: 1000,
+  });
+  userLocationMarker.bindPopup(
+    '<div class="fuel-popup"><div class="fuel-popup-title user-location-popup">Вы здесь</div></div>'
+  );
+  userLocationMarker.addTo(map);
+  setGeolocationHint(false);
+}
+
+function requestUserGeolocation() {
+  return new Promise((resolve, reject) => {
+    if (!window.isSecureContext) {
+      reject(new Error("insecure"));
+      return;
+    }
+    if (!navigator.geolocation) {
+      reject(new Error("unsupported"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => reject(err),
+      {
+        enableHighAccuracy: false,
+        timeout: GEOLOCATION_TIMEOUT_MS,
+        maximumAge: 60000,
+      }
+    );
+  });
+}
+
+async function applyGeolocationToMap() {
+  try {
+    const { lat, lng } = await requestUserGeolocation();
+    showUserLocation(lat, lng);
+  } catch {
+    setGeolocationHint(true, "Геолокация недоступна — показываем всю страну");
+  }
 }
 
 function statusConfigFor(status) {
@@ -423,8 +491,8 @@ async function initFuelMap() {
   buildLegend();
 
   map = L.map(mapEl, {
-    center: [61, 90],
-    zoom: 3,
+    center: DEFAULT_MAP_CENTER,
+    zoom: DEFAULT_MAP_ZOOM,
     minZoom: 2,
     maxZoom: 15,
     worldCopyJump: true,
@@ -467,6 +535,7 @@ async function initFuelMap() {
   }
 
   await refreshLatestUpdates();
+  applyGeolocationToMap();
 
   let pendingLatLng = null;
 

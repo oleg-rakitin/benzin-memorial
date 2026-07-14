@@ -315,7 +315,10 @@
 
     <div class="map-layout">
       <div class="map-card">
-        <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
+        <div class="fuel-map-wrap">
+          <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
+          <p id="mapGeolocationHint" class="map-geolocation-hint" hidden>Геолокация недоступна — показываем всю страну</p>
+        </div>
         <p class="map-hint">Кликните по свободному месту на карте, чтобы добавить новую заправку. Кликните по существующему маркеру — увидите статус, подробности и сможете сами его отметить.</p>
         <p class="map-osm-attribution">Список заправок: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
       </div>
