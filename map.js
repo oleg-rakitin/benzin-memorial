@@ -20,13 +20,13 @@
  * REST API backend'а.
  */
 
-// GitHub Pages — статика без backend; запросы идут на прод-сервер по HTTPS.
-// На benzinopedia.ru (VPS) nginx проксирует /api/ → Go backend напрямую,
-// без PHP-shim api.php (см. server/deploy/nginx-benzinopedia.conf).
+// Split-архитектура: статика на benzinopedia.ru (reg.ru), API на api.benzinopedia.ru (VPS).
+// Cross-origin fetch — CORS на Go backend (CORS_ALLOWED_ORIGINS).
+// Локальная разработка — относительный /api (nginx или live-server proxy).
 const API_BASE =
-  location.hostname === "oleg-rakitin.github.io"
-    ? "https://benzinopedia.ru/api"
-    : "/api";
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "/api"
+    : "https://api.benzinopedia.ru/api";
 
 const FETCH_TIMEOUT_MS = 8000;
 const GEOLOCATION_TIMEOUT_MS = 9000;

@@ -1,15 +1,19 @@
-# Деплой на VPS (FastPanel, root)
+# Деплой backend на VPS (FastPanel, root)
 
-Миграция с shared-хостинга reg.ru (`37.140.192.133`, PHP-shim `api.php`) на VPS с root-доступом и прямым nginx proxy.
+Split-архитектура:
 
-## Текущий прод-сервер
+| Компонент | Сервер | Путь |
+|-----------|--------|------|
+| Статика (HTML, CSS, JS) | reg.ru `37.140.192.133` | `/var/www/u3577787/data/www/benzinopedia.ru/` |
+| Go backend + MariaDB | VPS `5.188.19.170` | `/opt/benzinopedia-backend/` |
+| API (публичный URL) | `https://api.benzinopedia.ru/api/` | nginx → `127.0.0.1:8082` |
+
+## VPS (backend-only)
 
 | Параметр | Значение |
 |----------|----------|
 | IP | `5.188.19.170` |
-| ОС | Ubuntu 24.04, nginx 1.30, MariaDB 11.8 |
 | Backend | systemd `benzinopedia-backend.service`, порт `8082` |
-| Статика | `/var/www/benzinopedia.ru/` |
 | БД | MariaDB `benzinopedia` / пользователь `benzinopedia` |
 
 ## Сборка и выкладка backend
@@ -22,14 +26,14 @@ scp benzinopedia-backend root@5.188.19.170:/opt/benzinopedia-backend/
 scp deploy/.env root@5.188.19.170:/opt/benzinopedia-backend/
 scp deploy/benzinopedia-backend.service root@5.188.19.170:/etc/systemd/system/
 
-ssh root@5.188.19.170 'systemctl daemon-reload && systemctl enable --now benzinopedia-backend'
+ssh root@5.188.19.170 'systemctl daemon-reload && systemctl restart benzinopedia-backend'
 ```
 
-## Nginx
+## Nginx (только API)
 
 ```bash
-scp deploy/nginx-benzinopedia.conf root@5.188.19.170:/etc/nginx/conf.d/benzinopedia.conf
-ssh root@5.188.19.170 'nginx -t && systemctl reload nginx'
+scp deploy/nginx-api-benzinopedia.conf root@5.188.19.170:/etc/nginx/conf.d/benzinopedia.conf
+ssh root@5.188.19.170 'rm -f /etc/nginx/conf.d/benzinopedia.conf.bak; nginx -t && systemctl reload nginx'
 ```
 
 Проверка:
@@ -39,30 +43,40 @@ curl http://5.188.19.170/api/health
 curl 'http://5.188.19.170/api/stations?limit=1'
 ```
 
-## SSL (Let's Encrypt)
+## SSL для api.benzinopedia.ru
 
-DNS `benzinopedia.ru` → `5.188.19.170` должен быть настроен **до** выпуска сертификата:
+1. DNS: `api.benzinopedia.ru` A → `5.188.19.170`
+2. Дождитесь распространения (dig api.benzinopedia.ru)
+3. Выпуск сертификата:
 
 ```bash
-certbot --nginx -d benzinopedia.ru -d www.benzinopedia.ru
+certbot --nginx -d api.benzinopedia.ru
 ```
 
-На момент миграции (2026-07-15) домен `benzinopedia.ru` в публичном DNS не резолвился (NXDOMAIN) — certbot пропущен.
+`benzinopedia.ru` (статика) остаётся на reg.ru — A-запись apex **не** переносится на VPS.
 
-## Переключение DNS
+## CORS
 
-1. В панели регистратора домена создайте/обновите A-запись: `benzinopedia.ru` → `5.188.19.170`
-2. Опционально: `www.benzinopedia.ru` → `5.188.19.170` (или CNAME на apex)
-3. Дождитесь распространения (TTL, обычно 5–60 мин)
-4. Выпустите SSL: `certbot --nginx -d benzinopedia.ru -d www.benzinopedia.ru`
-5. Старый сервер `37.140.192.133` **не удалять** — откат через возврат A-записи
+Backend должен разрешать origin'ы фронтенда (статика на reg.ru и GitHub Pages):
 
-## Отличие от shared-хостинга
+```
+CORS_ALLOWED_ORIGINS=https://benzinopedia.ru,http://benzinopedia.ru,https://www.benzinopedia.ru,http://www.benzinopedia.ru,https://oleg-rakitin.github.io
+```
 
-| Shared (reg.ru) | VPS |
-|-----------------|-----|
+## Деплой map.js на reg.ru (статика)
+
+```bash
+scp map.js u3577787@37.140.192.133:/var/www/u3577787/data/www/benzinopedia.ru/map.js
+```
+
+`map.js` указывает на `https://api.benzinopedia.ru/api` (cross-origin).
+
+## Отличие от shared-хостинга (legacy)
+
+| Shared (reg.ru) | VPS (API) |
+|-----------------|-----------|
 | `api.php` → `127.0.0.1:8082` | nginx `location /api/` → `127.0.0.1:8082` |
 | `nohup` + cron | systemd |
 | БД `u3577787_default` | БД `benzinopedia` |
 
-Фронтенд (`map.js`): на проде путь `/api/` (без `?path=` и без `api.php`).
+На reg.ru удалены: `~/benzinopedia-backend/`, cron, `api.php`. Статика **не трогается**.
