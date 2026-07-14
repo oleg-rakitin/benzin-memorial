@@ -447,6 +447,27 @@ body::before {
   color: var(--text);
 }
 
+/* ---------- official quote ---------- */
+.official-quote {
+  max-width: 720px;
+  margin: 0 auto 40px;
+  padding: 20px 26px;
+  border-left: 3px solid var(--gold);
+  background: var(--card-light);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--text);
+}
+
+.official-quote cite {
+  display: block;
+  margin-top: 10px;
+  font-style: normal;
+  font-size: 0.82rem;
+  color: var(--gold-light);
+  letter-spacing: 0.2px;
+}
+
 /* ---------- stats strip (attacks) ---------- */
 .stats-strip {
   display: grid;
@@ -640,6 +661,255 @@ body::before {
   font-size: 1.1rem;
   width: 22px;
   text-align: center;
+}
+
+/* ---------- fuel map ---------- */
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.map-card {
+  background: linear-gradient(160deg, var(--card), #16161a);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.fuel-map {
+  width: 100%;
+  height: 460px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+
+.map-hint {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.map-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.map-legend-card,
+.map-disclaimer-card {
+  background: linear-gradient(160deg, var(--card), #16161a);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.map-legend-card h3 {
+  font-family: var(--font-head);
+  color: var(--gold-light);
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.map-legend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 13px;
+  height: 13px;
+  min-width: 13px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.map-disclaimer-card {
+  border-left: 3px solid var(--red-light);
+}
+
+.map-disclaimer-card p {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.map-disclaimer-card strong {
+  color: var(--gold-light);
+}
+
+/* Leaflet custom marker dot */
+.fuel-marker-icon {
+  background: transparent;
+  border: none;
+}
+
+.fuel-marker-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 10, 12, 0.85);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Leaflet popup theming to match the memorial aesthetic */
+.leaflet-popup-content-wrapper {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-tip {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.leaflet-popup-content {
+  margin: 14px 16px;
+  font-family: var(--font-body);
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--text-dim);
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: var(--gold-light);
+}
+
+.fuel-popup-title {
+  font-family: var(--font-head);
+  color: var(--gold-light);
+  font-weight: 700;
+  font-size: 0.98rem;
+  margin-bottom: 4px;
+}
+
+.fuel-popup-status {
+  font-weight: bold;
+  font-size: 0.88rem;
+  margin-bottom: 8px;
+}
+
+.fuel-popup-comment {
+  font-style: italic;
+  color: var(--text);
+  font-size: 0.86rem;
+  margin-bottom: 8px;
+}
+
+.fuel-popup-meta {
+  color: var(--text-dim);
+  font-size: 0.76rem;
+}
+
+.fuel-popup-origin {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.add-marker-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 210px;
+}
+
+.add-marker-title {
+  font-family: var(--font-head);
+  color: var(--gold-light);
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.add-marker-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.add-marker-form input,
+.add-marker-form select,
+.add-marker-form textarea {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 9px;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.add-marker-form textarea {
+  min-height: 50px;
+}
+
+.add-marker-form input:focus,
+.add-marker-form select:focus,
+.add-marker-form textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.add-marker-form button {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold) 60%, #a67c2e);
+  color: #1a1305;
+  border: none;
+  padding: 9px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-family: var(--font-head);
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  transition: opacity 0.2s;
+}
+
+.add-marker-form button:hover {
+  opacity: 0.9;
+}
+
+.add-marker-note {
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  font-style: italic;
+  text-align: center;
+  opacity: 0.8;
+}
+
+@media (max-width: 760px) {
+  .map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fuel-map {
+    height: 380px;
+  }
 }
 
 /* ---------- reasons ---------- */
