@@ -87,9 +87,126 @@ function initScrollReveal() {
   sections.forEach((section) => observer.observe(section));
 }
 
+function initScrollProgress() {
+  const bar = document.getElementById("scrollProgressBar");
+  if (!bar) return;
+
+  function update() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = scrollable > 0 ? Math.min(100, Math.max(0, (scrollTop / scrollable) * 100)) : 0;
+    bar.style.width = pct + "%";
+  }
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+}
+
+function initDotNav() {
+  const dotNav = document.getElementById("dotNav");
+  const navAnchors = document.querySelectorAll("#navLinks a");
+  if (!dotNav || !navAnchors.length) return;
+
+  const sections = [];
+  navAnchors.forEach((link) => {
+    const id = (link.getAttribute("href") || "").replace("#", "");
+    const section = id && document.getElementById(id);
+    if (!section) return;
+
+    sections.push(section);
+
+    const dot = document.createElement("a");
+    dot.href = "#" + id;
+    dot.dataset.section = id;
+    dot.setAttribute("aria-label", link.textContent.trim());
+
+    const label = document.createElement("span");
+    label.className = "dot-label";
+    label.textContent = link.textContent.trim();
+    dot.appendChild(label);
+
+    dotNav.appendChild(dot);
+  });
+
+  const dotLinks = dotNav.querySelectorAll("a");
+
+  function setActive(id) {
+    dotLinks.forEach((a) => a.classList.toggle("active", a.dataset.section === id));
+    navAnchors.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
+  }
+
+  if (!("IntersectionObserver" in window)) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) setActive(entry.target.id);
+      });
+    },
+    { threshold: 0, rootMargin: "-35% 0px -55% 0px" }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
+function initDayCounter() {
+  const el = document.getElementById("dayCounterNum");
+  if (!el) return;
+  const crisisStart = new Date("2025-08-01T00:00:00");
+  const now = new Date();
+  const days = Math.max(1, Math.floor((now - crisisStart) / 86400000));
+  el.textContent = days.toLocaleString("ru-RU");
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+}
+
+function initShareButtons() {
+  const shareUrl = "https://oleg-rakitin.github.io/benzin-memorial/";
+  const shareText = "Бензин — некролог. РФ, 2026. Помянем вместе 🕯️⛽";
+  const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+  const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+
+  document.querySelectorAll("[data-share-tg]").forEach((a) => (a.href = tgUrl));
+  document.querySelectorAll("[data-share-x]").forEach((a) => (a.href = xUrl));
+
+  document.querySelectorAll("[data-share-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+        } else {
+          const tmp = document.createElement("textarea");
+          tmp.value = shareUrl;
+          tmp.style.position = "fixed";
+          tmp.style.opacity = "0";
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand("copy");
+          document.body.removeChild(tmp);
+        }
+        showToast("Ссылка скопирована. Несите скорбь дальше 📋");
+      } catch {
+        showToast("Не удалось скопировать — придётся вручную 🙃");
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initBurgerMenu();
   initScrollReveal();
+  initScrollProgress();
+  initDotNav();
+  initDayCounter();
+  initShareButtons();
 
   const list = loadCondolences();
   renderCondolences(list);
