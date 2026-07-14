@@ -251,8 +251,9 @@ function initMapFab() {
 }
 
 function initShareButtons() {
-  const shareUrl = "https://oleg-rakitin.github.io/benzin-memorial/";
-  const shareText = "Бензин — некролог. РФ, 2026. Помянем вместе 🕯️⛽";
+  const shareUrl = "https://benzinopedia.ru/#karta";
+  const shareText =
+    "Помянем бензин вместе 🕯️⛽ Энциклопедия памяти топлива и карта скорби по заправкам — benzinopedia.ru";
   const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
   const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 
