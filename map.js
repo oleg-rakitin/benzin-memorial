@@ -20,13 +20,14 @@
  * REST API backend'а.
  */
 
-// Split-архитектура: статика на benzinopedia.ru (reg.ru), API на api.benzinopedia.ru (VPS).
-// Cross-origin fetch — CORS на Go backend (CORS_ALLOWED_ORIGINS).
+// Статика на benzinopedia.ru (reg.ru shared), Go backend на VPS 5.188.19.170.
+// На shared-хостинге нельзя слушать порты >1024 — API через PHP-прокси api.php
+// (исходящий curl к VPS, same-origin, без CORS и без DNS api.benzinopedia.ru).
 // Локальная разработка — относительный /api (nginx или live-server proxy).
 const API_BASE =
   location.hostname === "localhost" || location.hostname === "127.0.0.1"
     ? "/api"
-    : "https://api.benzinopedia.ru/api";
+    : "/api.php?path=";
 
 const FETCH_TIMEOUT_MS = 8000;
 const GEOLOCATION_TIMEOUT_MS = 9000;
@@ -123,10 +124,14 @@ function formatRelativeTime(timestampMs) {
 
 function buildApiUrl(path) {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const base = API_BASE.replace(/\/$/, "");
   const [pathOnly, query = ""] = normalized.slice(1).split("?");
-  let url = `${base}/${pathOnly}`;
-  if (query) url += `?${query}`;
+  if (API_BASE === "/api") {
+    let url = `/api/${pathOnly}`;
+    if (query) url += `?${query}`;
+    return url;
+  }
+  let url = `${API_BASE}/${pathOnly}`;
+  if (query) url += `&${query}`;
   return url;
 }
 
