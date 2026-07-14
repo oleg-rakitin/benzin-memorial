@@ -20,15 +20,13 @@
  * REST API backend'а.
  */
 
-// На GitHub Pages (чистая статика, без backend) запросы идут на реальный
-// сервер по прямому HTTPS-адресу через PHP-прокси (см. /server/deploy/api.php
-// и README.md — почему именно так, а не напрямую на порт backend'а).
-// На самом benzinopedia.ru прокси лежит на том же домене, поэтому путь
-// относительный — так надёжнее (нет CORS, нет mixed content).
+// GitHub Pages — статика без backend; запросы идут на прод-сервер по HTTPS.
+// На benzinopedia.ru (VPS) nginx проксирует /api/ → Go backend напрямую,
+// без PHP-shim api.php (см. server/deploy/nginx-benzinopedia.conf).
 const API_BASE =
   location.hostname === "oleg-rakitin.github.io"
-    ? "https://benzinopedia.ru/api.php"
-    : "/api.php";
+    ? "https://benzinopedia.ru/api"
+    : "/api";
 
 const FETCH_TIMEOUT_MS = 8000;
 const GEOLOCATION_TIMEOUT_MS = 9000;
@@ -120,10 +118,11 @@ function formatRelativeTime(timestampMs) {
 }
 
 function buildApiUrl(path) {
-  const clean = path.startsWith("/") ? path.slice(1) : path;
-  const [pathOnly, query = ""] = clean.split("?");
-  let url = `${API_BASE}?path=${encodeURIComponent(pathOnly)}`;
-  if (query) url += `&${query}`;
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const base = API_BASE.replace(/\/$/, "");
+  const [pathOnly, query = ""] = normalized.slice(1).split("?");
+  let url = `${base}/${pathOnly}`;
+  if (query) url += `?${query}`;
   return url;
 }
 

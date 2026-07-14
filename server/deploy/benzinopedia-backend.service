@@ -1,0 +1,19 @@
+[Unit]
+Description=Benzinopedia Map Backend (Go)
+Documentation=https://github.com/oleg-rakitin/benzin-memorial/tree/main/server
+After=network-online.target mariadb.service mysql.service
+Wants=network-online.target mariadb.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/benzinopedia-backend
+EnvironmentFile=/opt/benzinopedia-backend/.env
+ExecStart=/opt/benzinopedia-backend/benzinopedia-backend
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
