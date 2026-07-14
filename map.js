@@ -626,4 +626,10 @@ async function initFuelMap() {
   });
 }
 
+window.addEventListener("map-section-revealed", () => {
+  if (map) {
+    setTimeout(() => map.invalidateSize(), 350);
+  }
+});
+
 document.addEventListener("DOMContentLoaded", initFuelMap);

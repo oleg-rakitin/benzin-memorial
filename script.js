@@ -168,6 +168,88 @@ function showToast(message) {
   toast._hideTimer = setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
+function getScrollOffset() {
+  const header = document.querySelector(".site-header");
+  return header ? header.offsetHeight + 12 : 12;
+}
+
+function highlightMapSection(section) {
+  if (!section || section.id !== "karta") return;
+  section.classList.remove("map-highlight");
+  void section.offsetWidth;
+  section.classList.add("map-highlight");
+  clearTimeout(section._highlightTimer);
+  section._highlightTimer = setTimeout(() => section.classList.remove("map-highlight"), 2400);
+  window.dispatchEvent(new CustomEvent("map-section-revealed"));
+}
+
+function scrollToSection(target, { highlight = true } = {}) {
+  if (!target) return;
+  const top = target.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  if (highlight) highlightMapSection(target);
+}
+
+function initSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", (e) => {
+      const hash = anchor.getAttribute("href");
+      if (!hash || hash === "#") return;
+      const target = document.getElementById(hash.slice(1));
+      if (!target) return;
+      e.preventDefault();
+      scrollToSection(target);
+    });
+  });
+
+  if (location.hash) {
+    const target = document.getElementById(location.hash.slice(1));
+    if (target) {
+      requestAnimationFrame(() => {
+        scrollToSection(target, { highlight: true });
+      });
+    }
+  }
+}
+
+function initMapFab() {
+  const fab = document.getElementById("mapFab");
+  const hero = document.querySelector(".hero");
+  const mapSection = document.getElementById("karta");
+  if (!fab || !hero || !mapSection) return;
+
+  fab.hidden = false;
+
+  let heroPassed = false;
+  let mapVisible = false;
+
+  function updateFab() {
+    fab.classList.toggle("visible", heroPassed && !mapVisible);
+  }
+
+  if ("IntersectionObserver" in window) {
+    const heroObserver = new IntersectionObserver(
+      ([entry]) => {
+        heroPassed = !entry.isIntersecting;
+        updateFab();
+      },
+      { threshold: 0, rootMargin: "0px" }
+    );
+    heroObserver.observe(hero);
+
+    const mapObserver = new IntersectionObserver(
+      ([entry]) => {
+        mapVisible = entry.isIntersecting && entry.intersectionRatio > 0.15;
+        updateFab();
+      },
+      { threshold: [0, 0.15, 0.4], rootMargin: "-10% 0px -10% 0px" }
+    );
+    mapObserver.observe(mapSection);
+  } else {
+    fab.classList.add("visible");
+  }
+}
+
 function initShareButtons() {
   const shareUrl = "https://oleg-rakitin.github.io/benzin-memorial/";
   const shareText = "Бензин — некролог. РФ, 2026. Помянем вместе 🕯️⛽";
@@ -207,6 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initDotNav();
   initDayCounter();
   initShareButtons();
+  initSmoothScroll();
+  initMapFab();
 
   const list = loadCondolences();
   renderCondolences(list);

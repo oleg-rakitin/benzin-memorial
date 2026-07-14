@@ -59,10 +59,10 @@
     </button>
     <ul class="nav-links" id="navLinks">
       <li><a href="#nekrolog">Некролог</a></li>
+      <li><a href="#karta" class="nav-link--map">Карта скорби</a></li>
       <li><a href="#istoria">История</a></li>
       <li><a href="#ataki">Инциденты на НПЗ</a></li>
       <li><a href="#ocheredi">Очереди</a></li>
-      <li><a href="#karta">Карта скорби</a></li>
       <li><a href="#vidy">Виды топлива</a></li>
       <li><a href="#tseny">Цены</a></li>
       <li><a href="#prichiny">Причины</a></li>
@@ -86,6 +86,11 @@
     <div class="day-counter" id="dayCounter" title="Считаем с августа 2025-го — начала официального топливного кризиса">
       <span class="day-counter-emoji">🗓️</span>
       <span>День <b id="dayCounterNum">—</b> топливного кризиса</span>
+    </div>
+
+    <div class="hero-actions">
+      <a href="#karta" class="hero-cta hero-cta--map">🗺️ Где заправиться?</a>
+      <a href="#nekrolog" class="hero-cta hero-cta--ghost">Читать некролог ↓</a>
     </div>
 
     <div class="share-bar" data-share>
@@ -130,6 +135,51 @@
     Возложение цветов не требуется — просто оставьте зарплату в терминале.</p>
 
     <div class="quote-strip"><span class="quote-mark" aria-hidden="true">«</span>Не плачьте, что бензин закончился. Улыбнитесь, что он вообще был.<span class="quote-mark" aria-hidden="true">»</span></div>
+  </section>
+
+  <section id="karta" class="section map-section">
+    <h2>Карта скорби: статус заправок</h2>
+    <p class="section-intro">Список заправок собран из OpenStreetMap по всей России, а вот статус на них — дело народное:
+    единого официального сервиса с данными о наличии топлива в реальном времени в открытом доступе не существует,
+    так что эту карту по старой доброй памяти о сарафанном радио в очереди ведут сами посетители сайта. Отметьте место, где вы прощались с надеждой заправиться —
+    метка станет видна всем.</p>
+
+    <p id="mapOfflineBanner" class="map-offline-banner" hidden>
+      ⚠️ Сервер с общими отметками сейчас недоступен — карта показывает демонстрационные данные и метки только из этого браузера.
+      Попробуйте обновить страницу позже.
+    </p>
+
+    <div class="map-layout">
+      <div class="map-card">
+        <div class="fuel-map-wrap">
+          <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
+          <p id="mapGeolocationHint" class="map-geolocation-hint" hidden>Геолокация недоступна — показываем всю страну</p>
+        </div>
+        <p class="map-hint">Кликните по свободному месту на карте, чтобы добавить новую заправку. Кликните по существующему маркеру — увидите статус, подробности и сможете сами его отметить.</p>
+        <p class="map-osm-attribution">Список заправок: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
+      </div>
+
+      <aside class="map-sidebar">
+        <div class="map-legend-card">
+          <h3>Легенда скорби</h3>
+          <ul id="mapLegend" class="map-legend"></ul>
+        </div>
+
+        <div class="latest-updates-card">
+          <h3>Последние отметки</h3>
+          <div id="latestUpdatesList" class="latest-updates-list">
+            <p class="condolence-empty">Загрузка...</p>
+          </div>
+        </div>
+
+        <div class="map-disclaimer-card">
+          <p><strong>Как это работает теперь:</strong> список заправок и статусы хранятся на общем сервере —
+          отметку, оставленную любым посетителем сайта, увидят все остальные. Если сервер вдруг недоступен,
+          карта временно переключается в офлайн-режим с демо-данными и локальными метками
+          <em>только этого браузера</em> — чтобы сайт не выглядел пустым, пока сервер не вернётся.</p>
+        </div>
+      </aside>
+    </div>
   </section>
 
   <section id="istoria" class="section">
@@ -301,51 +351,6 @@
     <div class="quote-strip">«Занял очередь в 5 утра — не за бензином, а за ощущением, что хоть что-то в этой жизни ты ещё контролируешь.»</div>
   </section>
 
-  <section id="karta" class="section map-section">
-    <h2>Карта скорби: статус заправок</h2>
-    <p class="section-intro">Список заправок собран из OpenStreetMap по всей России, а вот статус на них — дело народное:
-    единого официального сервиса с данными о наличии топлива в реальном времени в открытом доступе не существует,
-    так что эту карту по старой доброй памяти о сарафанном радио в очереди ведут сами посетители сайта. Отметьте место, где вы прощались с надеждой заправиться —
-    метка станет видна всем.</p>
-
-    <p id="mapOfflineBanner" class="map-offline-banner" hidden>
-      ⚠️ Сервер с общими отметками сейчас недоступен — карта показывает демонстрационные данные и метки только из этого браузера.
-      Попробуйте обновить страницу позже.
-    </p>
-
-    <div class="map-layout">
-      <div class="map-card">
-        <div class="fuel-map-wrap">
-          <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
-          <p id="mapGeolocationHint" class="map-geolocation-hint" hidden>Геолокация недоступна — показываем всю страну</p>
-        </div>
-        <p class="map-hint">Кликните по свободному месту на карте, чтобы добавить новую заправку. Кликните по существующему маркеру — увидите статус, подробности и сможете сами его отметить.</p>
-        <p class="map-osm-attribution">Список заправок: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
-      </div>
-
-      <aside class="map-sidebar">
-        <div class="map-legend-card">
-          <h3>Легенда скорби</h3>
-          <ul id="mapLegend" class="map-legend"></ul>
-        </div>
-
-        <div class="latest-updates-card">
-          <h3>Последние отметки</h3>
-          <div id="latestUpdatesList" class="latest-updates-list">
-            <p class="condolence-empty">Загрузка...</p>
-          </div>
-        </div>
-
-        <div class="map-disclaimer-card">
-          <p><strong>Как это работает теперь:</strong> список заправок и статусы хранятся на общем сервере —
-          отметку, оставленную любым посетителем сайта, увидят все остальные. Если сервер вдруг недоступен,
-          карта временно переключается в офлайн-режим с демо-данными и локальными метками
-          <em>только этого браузера</em> — чтобы сайт не выглядел пустым, пока сервер не вернётся.</p>
-        </div>
-      </aside>
-    </div>
-  </section>
-
   <section id="vidy" class="section">
     <h2>Виды топлива (некрологи по отдельности)</h2>
     <p class="section-intro">Каждый сорт бензина ушёл по-своему. Листайте карточки, чтобы почтить память.</p>
@@ -461,5 +466,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="map.js"></script>
+
+<a href="#karta" class="map-fab" id="mapFab" aria-label="Перейти к карте заправок" hidden>
+  <span class="map-fab-icon" aria-hidden="true">🗺️</span>
+  <span class="map-fab-label">Карта</span>
+</a>
+
 </body>
 </html>
