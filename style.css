@@ -112,19 +112,33 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(10, 10, 12, 0.82);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, rgba(18, 15, 11, 0.95) 0%, rgba(10, 10, 12, 0.9) 100%);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 }
 
-.ribbon-corner {
+.site-header::before {
+  content: "";
   position: absolute;
-  top: 6px;
-  left: 10px;
-  color: var(--gold);
-  font-size: 14px;
-  opacity: 0.6;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;
+  height: 140px;
+  background: radial-gradient(ellipse at center, rgba(201, 160, 74, 0.16), transparent 72%);
+  pointer-events: none;
+}
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+  opacity: 0.55;
 }
 
 .navbar {
@@ -133,18 +147,52 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 18px 24px;
   flex-wrap: wrap;
   gap: 12px;
   position: relative;
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-badge {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  background: radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 55%, #5c4419 100%);
+  box-shadow: 0 0 16px rgba(201, 160, 74, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-title {
   font-family: var(--font-head);
   font-size: 1.2rem;
   letter-spacing: 0.5px;
   color: var(--gold-light);
   font-weight: 700;
+  line-height: 1.1;
+}
+
+.logo-subtitle {
+  font-size: 0.68rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.75;
 }
 
 .nav-links {
@@ -547,6 +595,51 @@ body::before {
   font-size: 0.8rem;
   margin-top: 40px;
   font-style: italic;
+}
+
+.fn-note {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+/* ---------- queue rules ---------- */
+.queue-rules {
+  max-width: 700px;
+  margin: 0 auto;
+  list-style: none;
+  counter-reset: queue-counter;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.queue-rules li {
+  counter-increment: queue-counter;
+  position: relative;
+  padding-left: 46px;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--card), #16161a);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  padding-right: 18px;
+}
+
+.queue-rules li::before {
+  content: counter(queue-counter);
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-head);
+  font-weight: 700;
+  color: var(--gold-light);
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
 }
 
 /* ---------- reasons ---------- */
