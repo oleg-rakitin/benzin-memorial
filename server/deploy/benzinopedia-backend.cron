@@ -1,0 +1,8 @@
+# Автозапуск backend'а после перезагрузки сервера (нет root => нет systemd
+# unit'а на уровне ОС, поэтому автозапуск через пользовательский crontab).
+# Установить: crontab -e, добавить строку ниже (путь подставить свой).
+@reboot /bin/bash $HOME/benzinopedia-backend/start.sh >> $HOME/benzinopedia-backend/cron.log 2>&1
+
+# Дополнительно: подстраховка на случай, если процесс упал — проверка раз
+# в 5 минут, start.sh идемпотентен (не перезапускает уже работающий процесс).
+*/5 * * * * /bin/bash $HOME/benzinopedia-backend/start.sh >> $HOME/benzinopedia-backend/cron.log 2>&1

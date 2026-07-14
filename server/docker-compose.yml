@@ -1,0 +1,33 @@
+# docker-compose для backend "Карты скорби". MySQL отдельным контейнером
+# НЕ поднимается — используется уже существующая MySQL на хосте (см. пункт
+# 3 задачи и README.md). Поэтому сервису нужен доступ к 127.0.0.1 хоста:
+# используется network_mode: host — тогда контейнер работает в сетевом
+# пространстве имён хоста напрямую, и "127.0.0.1" внутри контейнера — это
+# то же самое "127.0.0.1", на котором MySQL слушает на хосте. Без
+# network_mode: host слово "localhost"/"127.0.0.1" внутри контейнера
+# указывало бы на собственный loopback контейнера, а не на хост, и
+# подключение к БД просто не работало бы.
+#
+# Реальный статус на сервере 37.140.192.133: Docker daemon установлен, но
+# не запущен, а пользователь u3577787 не имеет root/sudo, чтобы его
+# поднять — поэтому этот compose-файл проверен сборкой образа локально,
+# но не запускался в проде на этом хостинге (см. README.md). Он готов к
+# использованию на любом Docker-совместимом хосте с root-доступом.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: benzinopedia-backend:latest
+    container_name: benzinopedia-backend
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SERVER_PORT: "8082"
+      MYSQL_HOST: "127.0.0.1"
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: "u3577787_default"
+      MYSQL_USER: "u3577787_default"
+      MYSQL_PASSWORD: "Axt3pRh13Y1Vg41I"
+      CORS_ALLOWED_ORIGINS: "https://benzinopedia.ru,https://oleg-rakitin.github.io"

@@ -1,0 +1,5 @@
+benzinopedia-backend
+benzinopedia-backend-linux
+benzinopedia-backend-darwin
+*.log
+.env

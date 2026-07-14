@@ -23,6 +23,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,500&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -301,13 +303,21 @@
 
   <section id="karta" class="section map-section">
     <h2>Карта скорби: статус заправок</h2>
-    <p class="section-intro">Единого официального сервиса с данными о наличии топлива в реальном времени по всей стране в открытом доступе не существует —
-    так что эту карту ведёт народ, по старой доброй памяти о сарафанном радио в очереди. Отметьте место, где вы прощались с надеждой заправиться.</p>
+    <p class="section-intro">Список заправок собран из OpenStreetMap по всей России, а вот статус на них — дело народное:
+    единого официального сервиса с данными о наличии топлива в реальном времени в открытом доступе не существует,
+    так что эту карту по старой доброй памяти о сарафанном радио в очереди ведут сами посетители сайта. Отметьте место, где вы прощались с надеждой заправиться —
+    метка станет видна всем.</p>
+
+    <p id="mapOfflineBanner" class="map-offline-banner" hidden>
+      ⚠️ Сервер с общими отметками сейчас недоступен — карта показывает демонстрационные данные и метки только из этого браузера.
+      Попробуйте обновить страницу позже.
+    </p>
 
     <div class="map-layout">
       <div class="map-card">
         <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
-        <p class="map-hint">Кликните по свободному месту на карте, чтобы оставить свою метку. Кликните по существующей метке — узнаете подробности и время скорби.</p>
+        <p class="map-hint">Кликните по свободному месту на карте, чтобы добавить новую заправку. Кликните по существующему маркеру — увидите статус, подробности и сможете сами его отметить.</p>
+        <p class="map-osm-attribution">Список заправок: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
       </div>
 
       <aside class="map-sidebar">
@@ -316,11 +326,18 @@
           <ul id="mapLegend" class="map-legend"></ul>
         </div>
 
+        <div class="latest-updates-card">
+          <h3>Последние отметки</h3>
+          <div id="latestUpdatesList" class="latest-updates-list">
+            <p class="condolence-empty">Загрузка...</p>
+          </div>
+        </div>
+
         <div class="map-disclaimer-card">
-          <p><strong>Честное предупреждение:</strong> сайт целиком статический, сервера у него нет и не будет —
-          поэтому ваши метки хранятся только в памяти <em>этого самого браузера на этом самом устройстве</em>,
-          как заначка бензина в гараже, о которой знаете только вы. Откройте сайт с телефона или у соседа —
-          и увидите девственно чистую карту без единого следа вашей скорби. Это не баг, а мемориальная архитектура.</p>
+          <p><strong>Как это работает теперь:</strong> список заправок и статусы хранятся на общем сервере —
+          отметку, оставленную любым посетителем сайта, увидят все остальные. Если сервер вдруг недоступен,
+          карта временно переключается в офлайн-режим с демо-данными и локальными метками
+          <em>только этого браузера</em> — чтобы сайт не выглядел пустым, пока сервер не вернётся.</p>
         </div>
       </aside>
     </div>
@@ -439,6 +456,7 @@
 <script src="bg-canvas.js"></script>
 <script src="script.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="map.js"></script>
 </body>
 </html>

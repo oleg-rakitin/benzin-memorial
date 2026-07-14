@@ -1294,6 +1294,133 @@ body::before {
   opacity: 0.8;
 }
 
+.fuel-popup-address {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+
+.fuel-popup-loading {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ---------- offline banner & OSM attribution ---------- */
+.map-offline-banner {
+  max-width: 900px;
+  margin: 0 auto 18px;
+  background: linear-gradient(160deg, rgba(138, 42, 42, 0.18), var(--card) 60%);
+  border: 1px solid rgba(214, 79, 79, 0.4);
+  border-radius: 8px;
+  padding: 12px 18px;
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.map-osm-attribution {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+.map-osm-attribution a {
+  color: var(--gold-light);
+  text-decoration: none;
+}
+
+.map-osm-attribution a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- "последние отметки" ---------- */
+.latest-updates-card {
+  background: linear-gradient(160deg, var(--card), #16161a);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.latest-updates-card h3 {
+  font-family: var(--font-head);
+  color: var(--gold-light);
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.latest-updates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.latest-update-item {
+  background: var(--card-light);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  padding: 10px 12px;
+  animation: fadeIn 0.4s ease;
+}
+
+.latest-update-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.latest-update-station {
+  font-family: var(--font-head);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.latest-update-status {
+  font-size: 0.76rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.latest-update-comment {
+  font-style: italic;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.latest-update-meta {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+/* Leaflet.markercluster theming to match the memorial aesthetic */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(201, 160, 74, 0.25);
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: rgba(201, 160, 74, 0.75);
+  color: #1a1305;
+  font-weight: bold;
+  font-family: var(--font-head);
+}
+
 @media (max-width: 760px) {
   .map-layout {
     grid-template-columns: 1fr;
