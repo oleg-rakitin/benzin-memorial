@@ -34,6 +34,17 @@ body {
   position: relative;
 }
 
+/* ---------- refinery background canvas ---------- */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
 /* ---------- grain / vignette overlay ---------- */
 .grain-overlay {
   position: fixed;
