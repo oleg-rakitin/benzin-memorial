@@ -30,6 +30,8 @@ const API_BASE =
 
 const FETCH_TIMEOUT_MS = 8000;
 const GEOLOCATION_TIMEOUT_MS = 9000;
+const STATIONS_BOUNDS_DEBOUNCE_MS = 350;
+const STATIONS_BBOX_LIMIT = 5000;
 const DEFAULT_MAP_CENTER = [61, 90];
 const DEFAULT_MAP_ZOOM = 3;
 const USER_LOCATION_ZOOM = 12;
@@ -98,6 +100,8 @@ let map = null;
 let clusterGroup = null;
 let userLocationMarker = null;
 let usingBackend = false;
+let stationsFetchTimer = null;
+let stationsFetchGen = 0;
 const markerByStationId = new Map();
 
 function escapeHtmlMap(str) {
@@ -441,9 +445,60 @@ function buildAddMarkerFormHtml() {
   `;
 }
 
+function buildStationsBoundsQuery() {
+  if (!map) return "";
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const params = new URLSearchParams({
+    minLat: String(sw.lat),
+    maxLat: String(ne.lat),
+    minLng: String(sw.lng),
+    maxLng: String(ne.lng),
+    limit: String(STATIONS_BBOX_LIMIT),
+  });
+  return `?${params.toString()}`;
+}
+
+async function loadStationsInBounds() {
+  return apiFetch(`/stations${buildStationsBoundsQuery()}`);
+}
+
+function removeStationsOutside(idsInView) {
+  for (const [id, marker] of markerByStationId) {
+    if (!idsInView.has(id)) {
+      clusterGroup.removeLayer(marker);
+      markerByStationId.delete(id);
+    }
+  }
+}
+
+async function refreshStationsInView() {
+  const gen = ++stationsFetchGen;
+  const stations = await loadStationsInBounds();
+  if (gen !== stationsFetchGen) return;
+
+  const ids = new Set(stations.map((s) => String(s.id)));
+  removeStationsOutside(ids);
+  for (const station of stations) {
+    if (!markerByStationId.has(String(station.id))) {
+      addStationMarker(station);
+    }
+  }
+}
+
+function scheduleStationsRefresh() {
+  if (!usingBackend || !map) return;
+  clearTimeout(stationsFetchTimer);
+  stationsFetchTimer = setTimeout(() => {
+    refreshStationsInView().catch((err) => {
+      console.warn("Не удалось обновить заправки для текущей области:", err);
+    });
+  }, STATIONS_BOUNDS_DEBOUNCE_MS);
+}
+
 async function loadStationsFromBackend() {
-  const stations = await apiFetch("/stations");
-  return stations;
+  return loadStationsInBounds();
 }
 
 async function refreshLatestUpdates() {
@@ -509,9 +564,8 @@ async function initFuelMap() {
       : L.layerGroup();
   clusterGroup.addTo(map);
 
-  let stations = null;
   try {
-    stations = await loadStationsFromBackend();
+    await apiFetch("/health");
     usingBackend = true;
   } catch (err) {
     console.warn("Backend недоступен, включаю офлайн-режим карты:", err);
@@ -522,8 +576,20 @@ async function initFuelMap() {
   if (offlineBanner) offlineBanner.hidden = usingBackend;
 
   if (usingBackend) {
-    stations.forEach((station) => addStationMarker(station));
-  } else {
+    try {
+      await refreshStationsInView();
+      map.on("moveend", scheduleStationsRefresh);
+      map.on("zoomend", scheduleStationsRefresh);
+    } catch (err) {
+      console.warn("Не удалось загрузить заправки, включаю офлайн-режим:", err);
+      usingBackend = false;
+      clusterGroup.clearLayers();
+      markerByStationId.clear();
+      if (offlineBanner) offlineBanner.hidden = false;
+    }
+  }
+
+  if (!usingBackend) {
     const now = Date.now();
     DEMO_STATIONS.forEach((station) => {
       addDemoMarker(map, { ...station, updatedAt: now - station.minutesAgo * 60000 }, false);

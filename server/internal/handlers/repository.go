@@ -19,12 +19,12 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
-// ListStationSummaries отдаёт облегчённый список всех заправок для карты:
-// координаты и только статус последней отметки (без комментариев, адресов
-// и авторов) — станций в базе может быть до нескольких десятков тысяч
-// (весь охват России из OSM), поэтому список должен оставаться лёгким.
-func (r *Repository) ListStationSummaries() ([]models.StationSummary, error) {
-	rows, err := r.db.Query(`
+// StationBounds — прямоугольник видимой области карты (min/max lat/lng).
+type StationBounds struct {
+	MinLat, MaxLat, MinLng, MaxLng float64
+}
+
+const stationSummarySelect = `
 		SELECT
 			s.id, s.name, s.lat, s.lng,
 			latest.status, latest.created_at,
@@ -42,9 +42,25 @@ func (r *Repository) ListStationSummaries() ([]models.StationSummary, error) {
 			SELECT station_id, COUNT(*) AS reports_count
 			FROM status_records
 			GROUP BY station_id
-		) cnt ON cnt.station_id = s.id
+		) cnt ON cnt.station_id = s.id`
+
+// ListStationSummaries отдаёт облегчённый список заправок для карты с опциональной
+// фильтрацией по bbox и обязательным LIMIT — без этого ответ по всей России
+// (~17k станций, >2 MB JSON) не успевает дойти до Safari по cross-origin fetch.
+func (r *Repository) ListStationSummaries(bounds *StationBounds, limit int) ([]models.StationSummary, error) {
+	query := stationSummarySelect
+	args := make([]any, 0, 5)
+	if bounds != nil {
+		query += `
+		WHERE s.lat >= ? AND s.lat <= ? AND s.lng >= ? AND s.lng <= ?`
+		args = append(args, bounds.MinLat, bounds.MaxLat, bounds.MinLng, bounds.MaxLng)
+	}
+	query += `
 		ORDER BY s.id ASC
-	`)
+		LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("выборка списка заправок: %w", err)
 	}

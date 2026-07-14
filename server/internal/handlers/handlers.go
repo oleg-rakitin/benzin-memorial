@@ -4,11 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"ru.benzinopedia/backend/internal/models"
+)
+
+const (
+	defaultStationListLimit     = 500
+	maxStationListLimit         = 500
+	defaultStationListBBoxLimit = 5000
+	maxStationListBBoxLimit     = 5000
 )
 
 type API struct {
@@ -39,12 +47,82 @@ func (a *API) Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// ListStations — GET /api/stations. Отдаёт облегчённый список всех заправок
+// ListStations — GET /api/stations. Отдаёт облегчённый список заправок
 // (id, название, координаты, статус последней отметки) — без адресов и
-// комментариев, чтобы ответ оставался быстрым при больших объёмах данных
-// (по всей России из OSM это десятки тысяч точек).
+// комментариев. Query-параметры minLat/maxLat/minLng/maxLng ограничивают
+// выборку видимой областью карты; limit по умолчанию 500 (до 5000 с bbox).
 func (a *API) ListStations(w http.ResponseWriter, r *http.Request) {
-	stations, err := a.repo.ListStationSummaries()
+	q := r.URL.Query()
+	minLat, hasMinLat, err := parseFloatQuery(q.Get("minLat"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "некорректный minLat")
+		return
+	}
+	maxLat, hasMaxLat, err := parseFloatQuery(q.Get("maxLat"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "некорректный maxLat")
+		return
+	}
+	minLng, hasMinLng, err := parseFloatQuery(q.Get("minLng"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "некорректный minLng")
+		return
+	}
+	maxLng, hasMaxLng, err := parseFloatQuery(q.Get("maxLng"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "некорректный maxLng")
+		return
+	}
+
+	bboxCount := 0
+	if hasMinLat {
+		bboxCount++
+	}
+	if hasMaxLat {
+		bboxCount++
+	}
+	if hasMinLng {
+		bboxCount++
+	}
+	if hasMaxLng {
+		bboxCount++
+	}
+	if bboxCount != 0 && bboxCount != 4 {
+		writeError(w, http.StatusBadRequest, "для фильтра по карте нужны все параметры: minLat, maxLat, minLng, maxLng")
+		return
+	}
+
+	var bounds *StationBounds
+	hasBBox := bboxCount == 4
+	if hasBBox {
+		if minLat < -90 || maxLat > 90 || minLng < -180 || maxLng > 180 || minLat > maxLat || minLng > maxLng {
+			writeError(w, http.StatusBadRequest, "некорректные границы области")
+			return
+		}
+		bounds = &StationBounds{MinLat: minLat, MaxLat: maxLat, MinLng: minLng, MaxLng: maxLng}
+	}
+
+	defaultLimit := defaultStationListLimit
+	maxLimit := maxStationListLimit
+	if hasBBox {
+		defaultLimit = defaultStationListBBoxLimit
+		maxLimit = maxStationListBBoxLimit
+	}
+
+	limit := defaultLimit
+	if v := q.Get("limit"); v != "" {
+		parsed, err := strconv.Atoi(v)
+		if err != nil || parsed <= 0 {
+			writeError(w, http.StatusBadRequest, "некорректный limit")
+			return
+		}
+		limit = parsed
+	}
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	stations, err := a.repo.ListStationSummaries(bounds, limit)
 	if err != nil {
 		log.Printf("ListStations: %v", err)
 		writeError(w, http.StatusInternalServerError, "не удалось получить список заправок")
@@ -54,6 +132,17 @@ func (a *API) ListStations(w http.ResponseWriter, r *http.Request) {
 		stations = []models.StationSummary{}
 	}
 	writeJSON(w, http.StatusOK, stations)
+}
+
+func parseFloatQuery(raw string) (float64, bool, error) {
+	if raw == "" {
+		return 0, false, nil
+	}
+	v, err := strconv.ParseFloat(raw, 64)
+	if err != nil || math.IsNaN(v) || math.IsInf(v, 0) {
+		return 0, true, err
+	}
+	return v, true, nil
 }
 
 // GetStation — GET /api/stations/{id}. Полная карточка заправки: адрес,
