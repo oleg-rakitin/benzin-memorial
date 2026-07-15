@@ -678,7 +678,8 @@ function initCitySearch() {
   const formEl = document.getElementById("mapCitySearchForm");
   const inputEl = document.getElementById("mapCitySearchInput");
   const searchWrap = document.getElementById("mapCitySearch");
-  if (!formEl || !inputEl) return;
+  if (!formEl || !inputEl || formEl.dataset.citySearchBound === "1") return;
+  formEl.dataset.citySearchBound = "1";
 
   formEl.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -693,6 +694,13 @@ function initCitySearch() {
   });
 
   inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      citySuggestGen++;
+      clearTimeout(citySuggestTimer);
+      searchCity(inputEl.value, { suggest: false });
+      return;
+    }
     if (e.key === "Escape") {
       hideCitySuggestions();
       inputEl.blur();
@@ -702,6 +710,19 @@ function initCitySearch() {
   document.addEventListener("click", (e) => {
     if (searchWrap && !searchWrap.contains(e.target)) hideCitySuggestions();
   });
+}
+
+function bindCitySearchEarly() {
+  const formEl = document.getElementById("mapCitySearchForm");
+  if (!formEl || formEl.dataset.citySearchEarly === "1") return;
+  formEl.dataset.citySearchEarly = "1";
+  formEl.addEventListener(
+    "submit",
+    (e) => {
+      e.preventDefault();
+    },
+    { capture: true }
+  );
 }
 
 async function loadStationsFromBackend() {
@@ -771,6 +792,8 @@ async function initFuelMap() {
       : L.layerGroup();
   clusterGroup.addTo(map);
 
+  initCitySearch();
+
   try {
     await apiFetch("/health");
     usingBackend = true;
@@ -807,7 +830,6 @@ async function initFuelMap() {
   }
 
   await refreshLatestUpdates();
-  initCitySearch();
   applyGeolocationToMap();
 
   let pendingLatLng = null;
@@ -905,4 +927,7 @@ window.addEventListener("map-section-revealed", () => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", initFuelMap);
+document.addEventListener("DOMContentLoaded", () => {
+  bindCitySearchEarly();
+  initFuelMap();
+});
