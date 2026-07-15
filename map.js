@@ -1,5 +1,5 @@
 /**
- * Карта скорби: статус заправок.
+ * Карта АЗС: статус заправок.
  *
  * ИСТОРИЯ ВОПРОСА (для тех, кто будет это поддерживать): раньше сайт был
  * полностью статическим (GitHub Pages) без единого сервера, и метки
@@ -279,13 +279,13 @@ function buildAddStatusFormHtml(stationId) {
       </label>
       <label>
         Комментарий (не обязательно)
-        <textarea name="comment" maxlength="140" placeholder="Например: очередь как в мавзолей"></textarea>
+        <textarea name="comment" maxlength="140" placeholder="Например: очередь на километр"></textarea>
       </label>
       <label>
         Ваш псевдоним (не обязательно)
         <input type="text" name="author" maxlength="40" placeholder="Например: Аноним из очереди">
       </label>
-      <button type="submit">Отметить статус 🕯️</button>
+      <button type="submit">Отметить статус ⛽</button>
       <p class="add-marker-note add-marker-note--muted"></p>
     </form>
   `;
@@ -427,7 +427,7 @@ function addDemoMarker(map, station, isUser) {
 function buildAddMarkerFormHtml() {
   return `
     <form class="add-marker-form">
-      <p class="add-marker-title">Отметить скорбь по бензину здесь</p>
+      <p class="add-marker-title">Добавить заправку на карту</p>
       <label>
         Название заправки
         <input type="text" name="name" maxlength="60" required placeholder="АЗС «Надежда», 3-й км">
@@ -438,13 +438,13 @@ function buildAddMarkerFormHtml() {
       </label>
       <label>
         Комментарий (не обязательно)
-        <textarea name="comment" maxlength="140" placeholder="Например: очередь как в мавзолей"></textarea>
+        <textarea name="comment" maxlength="140" placeholder="Например: очередь на километр"></textarea>
       </label>
       <label>
         Ваш псевдоним (не обязательно)
         <input type="text" name="author" maxlength="40" placeholder="Например: Аноним из очереди">
       </label>
-      <button type="submit">Отметить на карте 🕯️</button>
+      <button type="submit">Отметить на карте ⛽</button>
       <p class="add-marker-note">${usingBackend ? "Метка станет видна всем посетителям сайта." : "Backend недоступен: метка сохранится только в этом браузере."}</p>
     </form>
   `;

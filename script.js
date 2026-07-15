@@ -3,7 +3,7 @@ const STORAGE_KEY = "benzin-condolences";
 const defaultCondolences = [
   { name: "Автомобилист со стажем", text: "Помню тебя по 26 рублей за литр. Тогда я был счастлив и не знал об этом." },
   { name: "Дальнобойщик Виктор", text: "Ты был мне как брат. А теперь брат стоит как крыло от иномарки." },
-  { name: "Аноним у заправки", text: "Стоял в очереди в твою честь два часа. Это была не очередь, а поминальная служба." },
+  { name: "Аноним у заправки", text: "Стоял в очереди два часа. Это была не очередь, а марафон на выносливость." },
 ];
 
 function loadCondolences() {
@@ -30,7 +30,7 @@ function escapeHtml(str) {
 function renderCondolences(list) {
   const container = document.getElementById("condolenceList");
   if (!list.length) {
-    container.innerHTML = '<p class="condolence-empty">Пока никто не зажёг свечу. Будьте первым.</p>';
+    container.innerHTML = '<p class="condolence-empty">Пока никто не оставил отзыв. Будьте первым.</p>';
     return;
   }
   container.innerHTML = list
@@ -39,7 +39,7 @@ function renderCondolences(list) {
     .map(
       (c) => `
       <div class="condolence-item">
-        <div class="c-name">🕯️ ${escapeHtml(c.name)}</div>
+        <div class="c-name">💬 ${escapeHtml(c.name)}</div>
         <div class="c-text">${escapeHtml(c.text)}</div>
       </div>
     `
@@ -253,7 +253,7 @@ function initMapFab() {
 function initShareButtons() {
   const shareUrl = "https://benzinopedia.ru/#karta";
   const shareText =
-    "Помянем бензин вместе 🕯️⛽ Энциклопедия памяти топлива и карта скорби по заправкам — benzinopedia.ru";
+    "Энциклопедия бензина ⛽ Карта АЗС и хроника топливного кризиса в РФ — benzinopedia.ru";
   const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
   const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 
@@ -275,7 +275,7 @@ function initShareButtons() {
           document.execCommand("copy");
           document.body.removeChild(tmp);
         }
-        showToast("Ссылка скопирована. Несите скорбь дальше 📋");
+        showToast("Ссылка скопирована 📋");
       } catch {
         showToast("Не удалось скопировать — придётся вручную 🙃");
       }
