@@ -36,6 +36,11 @@ const STATIONS_BBOX_LIMIT = 5000;
 const DEFAULT_MAP_CENTER = [61, 90];
 const DEFAULT_MAP_ZOOM = 3;
 const USER_LOCATION_ZOOM = 12;
+const CITY_SEARCH_ZOOM = 11;
+const NOMINATIM_BASE = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_UA = "benzinopedia.ru / contact";
+const CITY_SUGGEST_DEBOUNCE_MS = 450;
+const CITY_SUGGEST_LIMIT = 5;
 
 const MARKERS_STORAGE_KEY = "benzin-map-markers";
 
@@ -103,6 +108,9 @@ let userLocationMarker = null;
 let usingBackend = false;
 let stationsFetchTimer = null;
 let stationsFetchGen = 0;
+let citySuggestTimer = null;
+let citySuggestGen = 0;
+let citySearchAbort = null;
 const markerByStationId = new Map();
 
 function escapeHtmlMap(str) {
@@ -502,6 +510,192 @@ function scheduleStationsRefresh() {
   }, STATIONS_BOUNDS_DEBOUNCE_MS);
 }
 
+function formatNominatimLabel(place) {
+  const name = place.name || place.display_name.split(",")[0];
+  const parts = (place.display_name || "").split(",").map((s) => s.trim());
+  const region = parts.length > 1 ? parts.slice(1, 3).join(", ") : "";
+  return region ? `${name}, ${region}` : name;
+}
+
+async function nominatimSearch(query, limit = 1) {
+  const q = query.trim();
+  if (!q) return [];
+
+  if (citySearchAbort) citySearchAbort.abort();
+  citySearchAbort = new AbortController();
+
+  const params = new URLSearchParams({
+    q,
+    format: "json",
+    limit: String(limit),
+    countrycodes: "ru",
+    addressdetails: "1",
+  });
+
+  const res = await fetch(`${NOMINATIM_BASE}?${params}`, {
+    signal: citySearchAbort.signal,
+    headers: { "Accept-Language": "ru", "User-Agent": NOMINATIM_UA },
+  });
+
+  if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+function setCitySearchMessage(text, isError = false) {
+  const msgEl = document.getElementById("mapCitySearchMsg");
+  if (!msgEl) return;
+  if (!text) {
+    msgEl.hidden = true;
+    msgEl.textContent = "";
+    msgEl.classList.remove("map-city-search-msg--error");
+    return;
+  }
+  msgEl.textContent = text;
+  msgEl.hidden = false;
+  msgEl.classList.toggle("map-city-search-msg--error", isError);
+}
+
+function hideCitySuggestions() {
+  const listEl = document.getElementById("mapCitySuggest");
+  if (!listEl) return;
+  listEl.hidden = true;
+  listEl.innerHTML = "";
+}
+
+function showCitySuggestions(places) {
+  const listEl = document.getElementById("mapCitySuggest");
+  if (!listEl) return;
+
+  if (!places.length) {
+    hideCitySuggestions();
+    return;
+  }
+
+  listEl.innerHTML = places
+    .map((place, idx) => {
+      const label = formatNominatimLabel(place);
+      return `<li><button type="button" class="map-city-suggest-item" role="option" data-idx="${idx}">${escapeHtmlMap(label)}</button></li>`;
+    })
+    .join("");
+  listEl.hidden = false;
+
+  listEl.querySelectorAll(".map-city-suggest-item").forEach((btn, idx) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      selectCityFromPlace(places[idx], formatNominatimLabel(places[idx]));
+    });
+  });
+}
+
+function goToCity(lat, lon, label) {
+  if (!map) return;
+  setGeolocationHint(false);
+  map.setView([lat, lon], CITY_SEARCH_ZOOM, { animate: true });
+  setCitySearchMessage(label ? `Показан: ${label}` : "");
+  hideCitySuggestions();
+}
+
+function selectCityFromPlace(place, label) {
+  const lat = parseFloat(place.lat);
+  const lon = parseFloat(place.lon);
+  if (Number.isNaN(lat) || Number.isNaN(lon)) {
+    setCitySearchMessage("Не удалось определить координаты города", true);
+    return;
+  }
+  const inputEl = document.getElementById("mapCitySearchInput");
+  if (inputEl) inputEl.value = label || formatNominatimLabel(place);
+  goToCity(lat, lon, label || formatNominatimLabel(place));
+}
+
+async function searchCity(query, { suggest = false } = {}) {
+  const q = query.trim();
+  if (!q) {
+    setCitySearchMessage("");
+    hideCitySuggestions();
+    return;
+  }
+
+  setCitySearchMessage(suggest ? "" : "Ищем…");
+
+  try {
+    const limit = suggest ? CITY_SUGGEST_LIMIT : 1;
+    const places = await nominatimSearch(q, limit);
+
+    if (suggest) {
+      showCitySuggestions(places);
+      return;
+    }
+
+    if (!places.length) {
+      hideCitySuggestions();
+      setCitySearchMessage("Город не найден — попробуйте другое название", true);
+      return;
+    }
+
+    selectCityFromPlace(places[0], formatNominatimLabel(places[0]));
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    console.warn("Ошибка геокодинга:", err);
+    hideCitySuggestions();
+    setCitySearchMessage("Не удалось выполнить поиск — попробуйте позже", true);
+  }
+}
+
+function scheduleCitySuggest(query) {
+  clearTimeout(citySuggestTimer);
+  const q = query.trim();
+  if (!q) {
+    hideCitySuggestions();
+    setCitySearchMessage("");
+    return;
+  }
+
+  const gen = ++citySuggestGen;
+  citySuggestTimer = setTimeout(async () => {
+    if (gen !== citySuggestGen) return;
+    try {
+      const places = await nominatimSearch(q, CITY_SUGGEST_LIMIT);
+      if (gen !== citySuggestGen) return;
+      showCitySuggestions(places);
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      console.warn("Подсказки геокодинга:", err);
+    }
+  }, CITY_SUGGEST_DEBOUNCE_MS);
+}
+
+function initCitySearch() {
+  const formEl = document.getElementById("mapCitySearchForm");
+  const inputEl = document.getElementById("mapCitySearchInput");
+  const searchWrap = document.getElementById("mapCitySearch");
+  if (!formEl || !inputEl) return;
+
+  formEl.addEventListener("submit", (e) => {
+    e.preventDefault();
+    citySuggestGen++;
+    clearTimeout(citySuggestTimer);
+    searchCity(inputEl.value, { suggest: false });
+  });
+
+  inputEl.addEventListener("input", () => {
+    setCitySearchMessage("");
+    scheduleCitySuggest(inputEl.value);
+  });
+
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      hideCitySuggestions();
+      inputEl.blur();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (searchWrap && !searchWrap.contains(e.target)) hideCitySuggestions();
+  });
+}
+
 async function loadStationsFromBackend() {
   return loadStationsInBounds();
 }
@@ -605,6 +799,7 @@ async function initFuelMap() {
   }
 
   await refreshLatestUpdates();
+  initCitySearch();
   applyGeolocationToMap();
 
   let pendingLatLng = null;

@@ -154,11 +154,20 @@
     <div class="map-layout">
       <div class="map-card">
         <div class="fuel-map-wrap">
+          <div class="map-city-search" id="mapCitySearch">
+            <form class="map-city-search-form" id="mapCitySearchForm" role="search" autocomplete="off">
+              <label class="visually-hidden" for="mapCitySearchInput">Найти город на карте</label>
+              <input type="search" id="mapCitySearchInput" class="map-city-search-input" placeholder="Москва, Казань…" autocomplete="off" enterkeyhint="search" maxlength="80">
+              <button type="submit" class="map-city-search-btn" aria-label="Найти город">🔍</button>
+            </form>
+            <ul id="mapCitySuggest" class="map-city-suggest" role="listbox" hidden></ul>
+            <p id="mapCitySearchMsg" class="map-city-search-msg" role="status" hidden></p>
+          </div>
           <div id="fuelMap" class="fuel-map" aria-label="Карта статуса заправок по городам России"></div>
           <p id="mapGeolocationHint" class="map-geolocation-hint" hidden>Геолокация недоступна — показываем всю страну</p>
         </div>
         <p class="map-hint">Кликните по свободному месту на карте, чтобы добавить новую заправку. Кликните по существующему маркеру — увидите статус, подробности и сможете сами его отметить.</p>
-        <p class="map-osm-attribution">Список заправок: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
+        <p class="map-osm-attribution">Список заправок и геокодинг городов: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, данные распространяются по лицензии ODbL.</p>
       </div>
 
       <aside class="map-sidebar">
