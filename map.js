@@ -38,9 +38,21 @@ const DEFAULT_MAP_ZOOM = 3;
 const USER_LOCATION_ZOOM = 12;
 const CITY_SEARCH_ZOOM = 11;
 const NOMINATIM_BASE = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_PROXY = "/geocode.php";
 const NOMINATIM_UA = "benzinopedia.ru / contact";
 const CITY_SUGGEST_DEBOUNCE_MS = 450;
 const CITY_SUGGEST_LIMIT = 5;
+
+function nominatimEndpoint(query, limit) {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    params.set("format", "json");
+    params.set("countrycodes", "ru");
+    params.set("addressdetails", "1");
+    return `${NOMINATIM_BASE}?${params}`;
+  }
+  return `${NOMINATIM_PROXY}?${params}`;
+}
 
 const MARKERS_STORAGE_KEY = "benzin-map-markers";
 
@@ -524,17 +536,13 @@ async function nominatimSearch(query, limit = 1) {
   if (citySearchAbort) citySearchAbort.abort();
   citySearchAbort = new AbortController();
 
-  const params = new URLSearchParams({
-    q,
-    format: "json",
-    limit: String(limit),
-    countrycodes: "ru",
-    addressdetails: "1",
-  });
+  const useProxy = !(location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  const headers = { "Accept-Language": "ru" };
+  if (!useProxy) headers["User-Agent"] = NOMINATIM_UA;
 
-  const res = await fetch(`${NOMINATIM_BASE}?${params}`, {
+  const res = await fetch(nominatimEndpoint(q, limit), {
     signal: citySearchAbort.signal,
-    headers: { "Accept-Language": "ru", "User-Agent": NOMINATIM_UA },
+    headers,
   });
 
   if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
